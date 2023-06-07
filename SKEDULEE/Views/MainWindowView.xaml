@@ -1,0 +1,155 @@
+﻿<Window x:Class="SKEDULEE.Views.MainWindowView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+        xmlns:local="clr-namespace:SKEDULEE"
+        xmlns:icons="clr-namespace:SKEDULEE.Icons"
+        xmlns:controls="clr-namespace:SKEDULEE.Controls"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:enums="clr-namespace:SKEDULEE.Enums"
+        mc:Ignorable="d"
+        Title="SKEDULEE" Height="450" Width="800">
+    <Window.Resources>
+        <CollectionViewSource Source="{Binding SelectedCalendar.TaskTypes}" x:Key="taskTypesSource">
+            <CollectionViewSource.SortDescriptions>
+                <scm:SortDescription PropertyName="Order"/>
+            </CollectionViewSource.SortDescriptions>
+        </CollectionViewSource>
+
+        <CollectionViewSource Source="{Binding SelectedCalendar.TaskStatuses}" x:Key="taskStatusesSource">
+            <CollectionViewSource.SortDescriptions>
+                <scm:SortDescription PropertyName="Order"/>
+            </CollectionViewSource.SortDescriptions>
+        </CollectionViewSource>
+
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </Window.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition />
+            <ColumnDefinition  Width="40"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Left panel -->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="40" />
+            </Grid.RowDefinitions>
+
+            <Button HorizontalContentAlignment="Stretch" Command="{Binding AddCalendar}">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                    <icons:IconAdd />
+                    <TextBlock VerticalAlignment="Center"
+                        Foreground="White">
+                        Add Calendar
+                    </TextBlock>
+                </StackPanel>
+            </Button>
+
+            <ListBox Grid.Row="1" ItemsSource="{Binding Calendars}"
+                ItemTemplate="{StaticResource calendarListItem}"
+                SelectedItem="{Binding SelectedCalendar}">
+                <ListBox.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Delete" Command="{Binding DeleteCalendar}"
+                            CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}, Path=PlacementTarget.SelectedItem}"/>
+                    </ContextMenu>
+                </ListBox.ContextMenu>
+            </ListBox>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="2">
+                <Button Width="40" Height="40">
+                    <icons:IconSettings />
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- Center panel -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Top bar -->
+            <StackPanel Orientation="Horizontal">
+                <Button Height="40" Width="120" Command="{Binding AddTask}">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                        <icons:IconAdd />
+                        <TextBlock VerticalAlignment="Center" Foreground="White">Add Task</TextBlock>
+                    </StackPanel>
+                </Button>
+
+                <controls:CustomComboBox Margin="2"
+                    ItemsSource="{Binding Source={StaticResource taskTypesSource}}"
+                    ItemTemplate="{StaticResource taskTypesListItem}" 
+                    SelectedItem="{Binding SelectedTaskType}"
+                    AddButtonCommand="{Binding AddTaskType}"/>
+                <controls:CustomComboBox Margin="2"
+                    ItemsSource="{Binding Source={StaticResource taskStatusesSource}}"
+                    ItemTemplate="{StaticResource taskStatusesListItem}"
+                    SelectedItem="{Binding SelectedTaskStatus}"
+                    AddButtonCommand="{Binding AddTaskStatus}"/>
+            </StackPanel>
+
+            <!-- Content Panel -->
+            <controls:MyTasksControl
+                Visibility="{Binding ElementName=viewTaskButton, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}"
+                UserTasks="{Binding ShowedTasks, Mode=OneWay}"
+                StartDate="{Binding ViewStartDate, Mode=TwoWay}"
+                SelectedDate="{Binding ViewSelectedDate, Mode=TwoWay}"
+                EndDate="{Binding ViewEndDate, Mode=TwoWay}"
+                Grid.Row="1"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch">
+            </controls:MyTasksControl>
+            <controls:CalendarControl
+                Visibility="{Binding ElementName=viewCalendarButton, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}"
+                UserTasks="{Binding ShowedTasks, Mode=OneWay}"
+                StartDate="{Binding ViewStartDate, Mode=TwoWay}"
+                SelectedDate="{Binding ViewSelectedDate, Mode=TwoWay}"
+                EndDate="{Binding ViewEndDate, Mode=TwoWay}"
+                Grid.Row="1"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch">
+            </controls:CalendarControl>
+
+            <!-- Loading indicator -->
+            <Border Grid.Row="1" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Label Content="Loading..." HorizontalAlignment="Center" VerticalAlignment="Center"></Label>
+            </Border>
+        </Grid>
+
+        <!-- Right panel -->
+        <StackPanel Orientation="Vertical" Grid.Column="2">
+            <RadioButton 
+                x:Name="viewTaskButton"
+                GroupName="view"
+                Width="40"
+                Height="40"
+                IsChecked="True"
+                Style="{StaticResource ViewChangeRadioButton}"
+                Command="{Binding SetValidDates}"
+                CommandParameter="{x:Static enums:CurrentView.MyTasks}">
+                <icons:IconTaskView />
+            </RadioButton>
+            <RadioButton
+                x:Name="viewCalendarButton"
+                GroupName="view"
+                Width="40"
+                Height="40"
+                Style="{StaticResource ViewChangeRadioButton}"
+                Command="{Binding SetValidDates}"
+                CommandParameter="{x:Static enums:CurrentView.Calendar}">
+                <icons:IconsCalendarView />
+            </RadioButton>
+            
+        </StackPanel>
+
+    </Grid>
+</Window>
